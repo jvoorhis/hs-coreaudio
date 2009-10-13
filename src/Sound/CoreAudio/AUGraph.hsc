@@ -2,14 +2,14 @@
 
 module Sound.CoreAudio.AUGraph (
   ComponentDescription (..),
-  newAUGraph,
+  new,
   addNode
 ) where
 
 import System.Mac.ComponentDescription
 import System.Mac.OSStatus
-import Foreign
-import Foreign.C.Types
+import Foreign (Ptr, Storable (..), alloca)
+import Foreign.C.Types (CInt)
 
 data OpaqueAUGraph
 newtype AUGraph = AUGraph (Ptr OpaqueAUGraph)
@@ -18,12 +18,12 @@ type AUNode = (AUGraph, CInt)
 foreign import ccall "AUGraph.h NewAUGraph"
   c_NewAUGraph :: Ptr (Ptr OpaqueAUGraph) -> IO OSStatus
 
-newAUGraph :: IO AUGraph
-newAUGraph = alloca $ \ptr -> do
+new :: IO AUGraph
+new = alloca $ \ptr -> do
   requireNoErr $ c_NewAUGraph ptr
   aup <- peek ptr
   return $ AUGraph aup
-{-# INLINE newAUGraph #-}
+{-# INLINE new #-}
 
 foreign import ccall "AUGraph.h AUGraphAddNode"
   c_AUGraphAddNode :: Ptr OpaqueAUGraph ->
