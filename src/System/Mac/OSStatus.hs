@@ -26,6 +26,6 @@ requireNoErr :: IO OSStatus -> IO OSStatus
 requireNoErr action = do 
   err <- action
   if err /= noErr
-    then throwIO $ OSErr err ""
+    then throwIO $ OSErr err "Unknown error"
     else return err
 {-# INLINE requireNoErr #-}
