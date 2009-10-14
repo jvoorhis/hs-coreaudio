@@ -49,7 +49,7 @@ dispose graph = do
 foreign import ccall "AUGraph.h AUGraphAddNode"
   c_AUGraphAddNode :: AUGraph ->
                       Ptr ComponentDescription ->
-                      Ptr CInt ->
+                      Ptr AUNode ->
                       IO OSStatus
 
 addNode :: AUGraph -> ComponentDescription -> IO AUNode
@@ -64,8 +64,8 @@ addNode graph cd = do
 
 foreign import ccall "AUGraph.h AUGraphConnectNodeInput"
   c_AUGraphConnectNodeInput :: AUGraph ->
-                               CInt -> CUInt ->
-                               CInt -> CUInt ->
+                               AUNode -> CUInt ->
+                               AUNode -> CUInt ->
                                IO OSStatus
 
 connect :: AUGraph -> (AUNode, Int) -> (AUNode, Int) -> IO ()
@@ -114,7 +114,7 @@ stop graph = do
 
 foreign import ccall "AUGraph.h AUGraphGetNodeInfo"
   c_AUGraphNodeInfo :: AUGraph ->
-                       CInt ->
+                       AUNode ->
                        Ptr ComponentDescription ->
                        Ptr AudioUnit ->
                        IO OSStatus
