@@ -2,6 +2,9 @@
 
 module Sound.CoreAudio.AUGraph (
   ComponentDescription (..),
+  AUGraph,
+  AUNode,
+  AudioUnit,
   new,
   dispose,
   addNode,
@@ -10,105 +13,121 @@ module Sound.CoreAudio.AUGraph (
   initialize,
   start,
   stop,
+  audioUnit,
   caShow
 ) where
 
-import System.Mac.ComponentDescription
+import System.Mac.Components
 import System.Mac.OSStatus
-import Foreign (Ptr, Storable (..), alloca)
-import Foreign.C.Types -- (CInt, CUInt)
+import Foreign (Ptr, Storable (..), alloca, nullPtr)
+import Foreign.C.Types (CInt, CUInt)
 
 data OpaqueAUGraph
-newtype AUGraph = AUGraph (Ptr OpaqueAUGraph)
+type AUGraph = Ptr OpaqueAUGraph
 type AUNode = CInt
+type AudioUnit = ComponentInstance
 
 foreign import ccall "AUGraph.h NewAUGraph"
-  c_NewAUGraph :: Ptr (Ptr OpaqueAUGraph) -> IO OSStatus
+  c_NewAUGraph :: Ptr AUGraph -> IO OSStatus
 
 new :: IO AUGraph
 new = alloca $ \ptr -> do
   requireNoErr $ c_NewAUGraph ptr
-  aup <- peek ptr
-  return $ AUGraph aup
+  graph <- peek ptr
+  return graph
 {-# INLINE new #-}
 
 foreign import ccall "AUGraph.h DisposeAUGraph"
-  c_DisposeAUGraph :: Ptr OpaqueAUGraph -> IO OSStatus
+  c_DisposeAUGraph :: AUGraph -> IO OSStatus
 
 dispose :: AUGraph -> IO ()
-dispose (AUGraph auP) = do
-  requireNoErr $ c_DisposeAUGraph auP
+dispose graph = do
+  requireNoErr $ c_DisposeAUGraph graph
   return ()
 {-# INLINE dispose #-}
 
 foreign import ccall "AUGraph.h AUGraphAddNode"
-  c_AUGraphAddNode :: Ptr OpaqueAUGraph ->
+  c_AUGraphAddNode :: AUGraph ->
                       Ptr ComponentDescription ->
                       Ptr CInt ->
                       IO OSStatus
 
 addNode :: AUGraph -> ComponentDescription -> IO AUNode
-addNode (AUGraph auP) cd = do
+addNode graph cd = do
   alloca $ \nodeP -> do
   alloca $ \cdP -> do
     poke cdP cd
-    requireNoErr $ c_AUGraphAddNode auP cdP nodeP
+    requireNoErr $ c_AUGraphAddNode graph cdP nodeP
     node <- peek nodeP
     return node
 {-# INLINE addNode #-}
 
 foreign import ccall "AUGraph.h AUGraphConnectNodeInput"
-  c_AUGraphConnectNodeInput :: Ptr OpaqueAUGraph ->
+  c_AUGraphConnectNodeInput :: AUGraph ->
                                CInt -> CUInt ->
                                CInt -> CUInt ->
                                IO OSStatus
 
 connect :: AUGraph -> (AUNode, Int) -> (AUNode, Int) -> IO ()
-connect (AUGraph auP) (n1, busOut) (n2, busIn) = do
-  requireNoErr $ c_AUGraphConnectNodeInput auP
+connect graph (n1, busOut) (n2, busIn) = do
+  requireNoErr $ c_AUGraphConnectNodeInput graph
                    n1 (toEnum busOut)
                    n2 (toEnum busIn)
   return ()
 {-# INLINE connect #-}
 
 foreign import ccall "AUGraph.h AUGraphOpen"
-  c_AUGraphOpen :: Ptr OpaqueAUGraph -> IO OSStatus
+  c_AUGraphOpen :: AUGraph -> IO OSStatus
 
 open :: AUGraph -> IO ()
-open (AUGraph auP) = do
-  requireNoErr $ c_AUGraphOpen auP
+open graph = do
+  requireNoErr $ c_AUGraphOpen graph
   return ()
 {-# INLINE open #-}
 
 foreign import ccall "AUGraph.h AUGraphInitialize"
-  c_AUGraphInitialize :: Ptr OpaqueAUGraph -> IO OSStatus
+  c_AUGraphInitialize :: AUGraph -> IO OSStatus
 
 initialize :: AUGraph -> IO ()
-initialize (AUGraph auP) = do
-  requireNoErr $ c_AUGraphInitialize auP
+initialize graph = do
+  requireNoErr $ c_AUGraphInitialize graph
   return ()
 {-# INLINE initialize #-}
 
 foreign import ccall "AUGraph.h AUGraphStart"
-  c_AUGraphStart :: Ptr OpaqueAUGraph -> IO OSStatus
+  c_AUGraphStart :: AUGraph -> IO OSStatus
 
 start :: AUGraph -> IO ()
-start (AUGraph p) = do
-  requireNoErr $ c_AUGraphStart p
+start graph = do
+  requireNoErr $ c_AUGraphStart graph
   return ()
 {-# INLINE start #-}
 
 foreign import ccall "AUGraph.h AUGraphStop"
-  c_AUGraphStop :: Ptr OpaqueAUGraph -> IO OSStatus
+  c_AUGraphStop :: AUGraph -> IO OSStatus
 
 stop :: AUGraph -> IO ()
-stop (AUGraph p) = do
-  requireNoErr $ c_AUGraphStop p
+stop graph = do
+  requireNoErr $ c_AUGraphStop graph
   return ()
 {-# INLINE stop #-}
 
+foreign import ccall "AUGraph.h AUGraphGetNodeInfo"
+  c_AUGraphNodeInfo :: AUGraph ->
+                       CInt ->
+                       Ptr ComponentDescription ->
+                       Ptr AudioUnit ->
+                       IO OSStatus
+
+audioUnit :: AUGraph -> AUNode -> IO AudioUnit
+audioUnit graph node = do
+  alloca $ \ptr -> do
+    requireNoErr $ c_AUGraphNodeInfo graph node nullPtr ptr
+    peek ptr
+{-# INLINE audioUnit #-}
+
 foreign import ccall "AUGraph.h CAShow"
-  c_caShow :: Ptr OpaqueAUGraph -> IO ()
+  c_caShow :: AUGraph -> IO ()
 
 caShow :: AUGraph -> IO ()
-caShow (AUGraph p) = c_caShow p
+caShow graph = c_caShow graph

@@ -18,7 +18,7 @@ Library
     ghc-options: -Wall -O2 -fvia-c -funbox-strict-fields
     exposed-modules:
         Sound.CoreAudio.AUGraph,
-        System.Mac.ComponentDescription,
+        System.Mac.Components,
         System.Mac.OSStatus,
         System.Mac.OSType
     frameworks: AudioToolbox

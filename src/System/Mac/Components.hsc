@@ -1,7 +1,8 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
 
-module System.Mac.ComponentDescription (
-  ComponentDescription (..)
+module System.Mac.Components (
+  ComponentDescription (..),
+  ComponentInstance
 ) where
 
 import Foreign
@@ -18,6 +19,9 @@ data ComponentDescription = ComponentDescription {
   componentFlags        :: CUInt,
   componentFlagsMask    :: CUInt
 }
+
+data ComponentInstanceRecord
+type ComponentInstance = Ptr ComponentInstanceRecord
 
 instance Storable ComponentDescription where
   alignment _ = #{alignment ComponentDescription}
