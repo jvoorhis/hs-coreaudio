@@ -1,12 +1,14 @@
-{-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
+{-# LANGUAGE EmptyDataDecls, ForeignFunctionInterface, GeneralizedNewtypeDeriving #-}
 
 module System.Mac.Components (
   ComponentDescription (..),
-  ComponentInstance
+  ComponentInstance,
+  ComponentResult
 ) where
 
 import Foreign
 import Foreign.C.Types
+import System.Mac.OSStatus
 import System.Mac.OSType
 
 #include "/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Headers/Components.h"
@@ -18,10 +20,7 @@ data ComponentDescription = ComponentDescription {
   componentManufacturer :: OSType,
   componentFlags        :: CUInt,
   componentFlagsMask    :: CUInt
-}
-
-data ComponentInstanceRecord
-type ComponentInstance = Ptr ComponentInstanceRecord
+} deriving (Eq, Show)
 
 instance Storable ComponentDescription where
   alignment _ = #{alignment ComponentDescription}
@@ -39,3 +38,9 @@ instance Storable ComponentDescription where
     #{poke ComponentDescription, componentManufacturer} ptr m
     #{poke ComponentDescription, componentFlags} ptr f
     #{poke ComponentDescription, componentFlagsMask} ptr k
+
+data ComponentInstanceRecord
+
+type ComponentInstance = Ptr ComponentInstanceRecord
+
+type ComponentResult = OSStatus

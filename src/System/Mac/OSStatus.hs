@@ -22,10 +22,10 @@ instance Exception OSErr
 noErr :: OSStatus
 noErr = 0
 
-requireNoErr :: IO OSStatus -> IO OSStatus
+requireNoErr :: IO OSStatus -> IO ()
 requireNoErr action = do 
   err <- action
   if err /= noErr
     then throwIO $ OSErr err "Unknown error"
-    else return err
+    else return ()
 {-# INLINE requireNoErr #-}
