@@ -1,8 +1,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+-- | A 'Storable' wrapper for @OSType@, a FourCC type common in Apple APIs.
+-- @System.Mac.OSType@ is meant to be used with @-XOverloadedStrings@.
 module System.Mac.OSType (
-  OSType (..),
-  fromString
+  OSType (..)
 ) where
 
 import Data.Bits (shift)
@@ -17,5 +18,5 @@ pad :: Int -> String -> String
 pad n = take n . (++ repeat ' ')
 
 instance IsString OSType where
-  fromString = OSType . foldl1 (<<) . map (fromIntegral . ord) . pad 4
+  fromString = OSType . foldl1 (<<) . map (toEnum . ord) . pad 4
     where x << y = shift x 8 + y

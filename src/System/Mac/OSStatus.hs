@@ -2,6 +2,7 @@
 
 module System.Mac.OSStatus (
   OSStatus,
+  OSStatusException,
   noErr,
   requireNoErr
 ) where
@@ -12,20 +13,23 @@ import Foreign.C.Types (CInt)
 
 type OSStatus = CInt
 
--- An OSErr may be thrown by requireNoErr when the result of an IO OSStatus
--- action /= noErr
-data OSException = OSException !OSStatus String
+-- | An 'OSStatusException' signals an 'IO' 'OSStatus' action returning a
+-- value other than 'noErr'
+data OSStatusException = OSStatusException !OSStatus String
   deriving (Typeable, Show)
 
-instance Exception OSException
+instance Exception OSStatusException
 
+-- | 'OSStatus' value indicating success
 noErr :: OSStatus
 noErr = 0
 
+-- | Runs an action of type 'IO' 'OSStatus' and returns 'IO' '()'
+-- or throws an 'OSStatusException'.
 requireNoErr :: IO OSStatus -> IO ()
 requireNoErr action = do 
   err <- action
   if err /= noErr
-    then throwIO $ OSException err "Unknown error"
+    then throwIO $ OSStatusException err "Unknown error"
     else return ()
 {-# INLINE requireNoErr #-}
