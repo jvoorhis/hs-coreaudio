@@ -1,14 +1,17 @@
 {-# LANGUAGE EmptyDataDecls, ForeignFunctionInterface, GeneralizedNewtypeDeriving #-}
 
+{- | Interface to the OS X Component Manager. Types are Storable
+     instances corresponding to the documentation at
+     <http://developer.apple.com/mac/library/documentation/Carbon/Reference/Component_Manager/Reference/reference.html>. -}
+
 module System.Mac.Components (
   ComponentDescription (..),
   ComponentInstance,
   ComponentResult
 ) where
 
-import Foreign
-import Foreign.C.Types
-import System.Mac.OSStatus
+import Foreign (Ptr, Storable (..))
+import Foreign.C.Types (CInt, CUInt)
 import System.Mac.OSType
 
 #include "/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Headers/Components.h"
@@ -43,4 +46,4 @@ data ComponentInstanceRecord
 
 type ComponentInstance = Ptr ComponentInstanceRecord
 
-type ComponentResult = OSStatus
+type ComponentResult = CInt

@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Concurrent (threadDelay)
-import Sound.CoreAudio.AUGraph
+import Sound.AudioToolbox.AUGraph
 
 -- Define ComponentDescriptions for AudioUnits in example
 dlsSynth = ComponentDescription {
@@ -21,9 +21,9 @@ defOut = ComponentDescription {
 }
 
 note device pitch duration = do
-  musicDeviceMIDIEvent device 0x90 pitch 100 0 -- note-on
+  midiEvent device 0x90 pitch 100 0 -- note-on
   threadDelay $ floor $ duration * 1000 * 1000
-  musicDeviceMIDIEvent device 0x80 pitch 100 0 -- note-off
+  midiEvent device 0x80 pitch 100 0 -- note-off
 
 main = do
   -- Setup an AUGraph with a synthesizer node fed into the default output

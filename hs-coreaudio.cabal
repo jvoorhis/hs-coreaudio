@@ -17,11 +17,13 @@ Library
     hs-source-dirs: src
     ghc-options: -Wall -O2 -fvia-c -funbox-strict-fields
     exposed-modules:
-        Sound.CoreAudio.AUGraph,
+        Sound.AudioUnit.AUComponent,
+        Sound.AudioUnit.MusicDevice,
+        Sound.AudioToolbox.AUGraph,
         System.Mac.Components,
         System.Mac.OSStatus,
         System.Mac.OSType
-    frameworks: AudioToolbox
+    frameworks: AudioToolbox, AudioUnit
     
     build-depends:
         base >= 4 && < 5

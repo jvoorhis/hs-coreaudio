@@ -1,9 +1,6 @@
-{-# LANGUAGE EmptyDataDecls,
-             ForeignFunctionInterface,
-             OverloadedStrings,
-             PatternGuards #-}
+{-# LANGUAGE EmptyDataDecls, ForeignFunctionInterface, OverloadedStrings, PatternGuards #-}
 
-module Sound.CoreAudio.AUGraph (
+module Sound.AudioToolbox.AUGraph (
   ComponentDescription (..),
   AUGraph,
   AUNode,
@@ -19,22 +16,22 @@ module Sound.CoreAudio.AUGraph (
   componentDescription,
   audioUnit,
   musicDevice,
-  musicDeviceMIDIEvent,
+  midiEvent,
   caShow
 ) where
 
-import System.Mac.Components
-import System.Mac.OSStatus
 import Foreign (Ptr, Storable (..), alloca, nullPtr)
 import Foreign.C.Types (CInt, CUInt)
+import System.Mac.Components
+import System.Mac.OSStatus
+import Sound.AudioUnit.AUComponent
+import Sound.AudioUnit.MusicDevice
 
 data OpaqueAUGraph
 
 type AUGraph = Ptr OpaqueAUGraph
 
 type AUNode = CInt
-
-type AudioUnit = ComponentInstance
 
 foreign import ccall "AUGraph.h NewAUGraph"
   c_NewAUGraph :: Ptr AUGraph -> IO OSStatus
@@ -125,8 +122,6 @@ componentDescription graph node = alloca $ \ptr -> do
   peek ptr
 {-# INLINE componentDescription #-}
 
-newtype MusicDeviceComponent = MusicDeviceComponent ComponentInstance
-
 musicDevice :: AUGraph -> AUNode -> IO MusicDeviceComponent
 musicDevice graph node = do
   cd <- componentDescription graph node
@@ -134,18 +129,6 @@ musicDevice graph node = do
     "aumu" -> return . MusicDeviceComponent =<< audioUnit graph node
     _      -> error $ show (componentType cd) ++ " is not a MusicDevice"
 {-# INLINE musicDevice #-}
-
-foreign import ccall "MusicDevice.h MusicDeviceMIDIEvent"
-  c_MusicDeviceMIDIEvent :: MusicDeviceComponent ->
-                            CUInt -> CUInt -> CUInt -> CUInt ->
-                            IO ComponentResult
-
-musicDeviceMIDIEvent :: MusicDeviceComponent -> Int -> Int -> Int -> Int -> IO ()
-musicDeviceMIDIEvent device status data1 data2 offsetSampleFrame
-  | st <- toEnum status,   d1 <- toEnum data1
-  , d2 <- toEnum data2,    sf <- toEnum offsetSampleFrame
-  = requireNoErr $ c_MusicDeviceMIDIEvent device st d1 d2 sf
-{-# INLINE musicDeviceMIDIEvent #-}
 
 foreign import ccall "AUGraph.h CAShow"
   c_caShow :: AUGraph -> IO ()
