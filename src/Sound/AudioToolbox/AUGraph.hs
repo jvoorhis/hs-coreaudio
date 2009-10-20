@@ -1,7 +1,9 @@
 {-# LANGUAGE EmptyDataDecls, ForeignFunctionInterface, OverloadedStrings, PatternGuards #-}
 
 -- | Types and operations corresponding to the definitions in
--- @AudioToolbox/AUGraph.h@
+-- @AudioToolbox/AUGraph.h@. For an overview of the api, see the section
+-- titled "Hosting Audio Units" in the document at
+-- <http://developer.apple.com/mac/library/documentation/MusicAudio/Conceptual/CoreAudioOverview/ARoadmaptoCommonTasks/ARoadmaptoCommonTasks.html>.
 
 module Sound.AudioToolbox.AUGraph (
   ComponentDescription (..), -- | See "System.Mac.Components"
@@ -23,9 +25,10 @@ module Sound.AudioToolbox.AUGraph (
   caShow
 ) where
 
+import Control.Applicative
 import Foreign (Ptr, Storable (..), alloca, nullPtr)
 import Foreign.C.Types (CInt, CUInt)
-import System.Mac.Components
+import System.Mac.Components hiding (componentDescription)
 import System.Mac.OSStatus
 import Sound.AudioUnit.AUComponent
 import Sound.AudioUnit.MusicDevice
@@ -149,7 +152,7 @@ musicDevice :: AUGraph -> AUNode -> IO MusicDeviceComponent
 musicDevice graph node = do
   cd <- componentDescription graph node
   case componentType cd of
-    "aumu" -> return . MusicDeviceComponent =<< audioUnit graph node
+    "aumu" -> MusicDeviceComponent <$> audioUnit graph node
     _      -> error $ show (componentType cd) ++ " is not a MusicDevice"
 {-# INLINE musicDevice #-}
 

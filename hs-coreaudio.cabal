@@ -22,7 +22,8 @@ Library
         Sound.AudioToolbox.AUGraph,
         System.Mac.Components,
         System.Mac.OSStatus,
-        System.Mac.OSType
+        System.Mac.OSType,
+        System.Mac.Types
     frameworks: AudioToolbox, AudioUnit
     
     build-depends:
