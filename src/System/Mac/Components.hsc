@@ -20,11 +20,8 @@ module System.Mac.Components (
 
 import Prelude hiding (any)
 import Control.Applicative
-import Control.Exception (bracket)
-import Data.Bits (bitSize)
 import Foreign (Ptr, Storable (..), alloca, nullPtr)
 import Foreign.C.Types (CInt, CUInt, CLong)
-import System.Mac.OSType
 import System.Mac.Types
 
 #include "/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Headers/Components.h"
@@ -118,10 +115,7 @@ componentDescription component = alloca $ \ptr -> do
 
 -- | Call @GetComponentInfo@ to retrieve a 'Component''s name as a String
 componentName :: Component -> IO String
-componentName component = bracket
-  (c_NewHandle $ bitSize (undefined::CInt) `div` 8)
-  c_DisposeHandle
-  (\h -> do
-    c_GetComponentInfo component nullPtr h nullPtr nullPtr
-    peek h >>= peekPascalStr)
+componentName component = withHandle $ \h -> do
+  c_GetComponentInfo component nullPtr h nullPtr nullPtr
+  peek h >>= peekPascalStr
 {-# INLINE componentName #-}
