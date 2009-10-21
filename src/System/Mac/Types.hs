@@ -40,9 +40,8 @@ foreign import ccall "DisposeHandle"
   c_DisposeHandle :: Handle -> IO ()
 
 withHandle :: (Handle -> IO a) -> IO a
-withHandle = bracket
-  (c_NewHandle $ bitSize (undefined::CInt) `div` 8)
-  c_DisposeHandle
+withHandle = bracket (c_NewHandle width) c_DisposeHandle
+  where width = bitSize (undefined::CInt) `div` 8
 
 peekPascalStr :: Ptr a -> IO String
 peekPascalStr ptr = do

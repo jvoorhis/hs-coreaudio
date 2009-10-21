@@ -15,7 +15,8 @@ module System.Mac.Components (
   findNextComponent,
   components,
   componentDescription,
-  componentName
+  componentName,
+  componentInfo
 ) where
 
 import Prelude hiding (any)
@@ -114,8 +115,21 @@ componentDescription component = alloca $ \ptr -> do
 {-# INLINE componentDescription #-}
 
 -- | Call @GetComponentInfo@ to retrieve a 'Component''s name as a String
-componentName :: Component -> IO String
+componentName :: Component -> IO (Maybe String)
 componentName component = withHandle $ \h -> do
   c_GetComponentInfo component nullPtr h nullPtr nullPtr
-  peek h >>= peekPascalStr
+  h' <- peek h
+  if nullPtr /= h'
+    then Just <$> peekPascalStr h'
+    else return Nothing
 {-# INLINE componentName #-}
+
+-- | Call @GetComponentInfo@ to retrieve a 'Component''s info string, if one
+-- is available.
+componentInfo :: Component -> IO (Maybe String)
+componentInfo component = withHandle $ \h -> do
+  c_GetComponentInfo component nullPtr nullPtr h nullPtr
+  h' <- peek h
+  if nullPtr /= h'
+    then Just <$> peekPascalStr h'
+    else return Nothing

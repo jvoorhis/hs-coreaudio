@@ -51,6 +51,3 @@ main = do
   -- Stop rendering and release graph
   stop graph
   dispose graph
-  
-  cs <- components $ ComponentDescription "aumu" any any 0 0
-  putStrLn =<< componentName (head cs)
