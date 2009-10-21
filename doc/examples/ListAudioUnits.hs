@@ -1,27 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module QueryAudioUnits where
+module ListAudioUnits where
 
 import Control.Monad
 import Prelude hiding (any)
 import System.Mac.Components
-
--- Define ComponentDescriptions for AudioUnits in example
-dlsSynth = ComponentDescription {
-  componentType         = "aumu", -- OSTypes can be denoted as literal strings
-  componentSubType      = "dls",  -- as long as OverloadedStrings are enabled
-  componentManufacturer = "appl",
-  componentFlags        = 0,
-  componentFlagsMask    = 0
-}
-
-defOut = ComponentDescription {
-  componentType         = "auou",
-  componentSubType      = "def",
-  componentManufacturer = "appl",
-  componentFlags        = 0,
-  componentFlagsMask    = 0
-}
 
 componentTypes = [("auou", "Output"),
                   ("aumu", "Music Devices"),
