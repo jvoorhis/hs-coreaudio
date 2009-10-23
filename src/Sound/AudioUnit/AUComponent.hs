@@ -12,7 +12,9 @@ module Sound.AudioUnit.AUComponent (
   ParameterValue,
   getPropertyInfo,
   getProperty,
-  getPropertyList
+  getPropertyList,
+  getParameter,
+  setParameter
 ) where
 
 import Control.Applicative
@@ -30,10 +32,8 @@ type Element = CUInt
 type ParameterValue = CFloat
 
 foreign import ccall "AUComponent.h AudioUnitGetPropertyInfo"
-  c_AudioUnitGetPropertyInfo :: AudioUnit
-                             -> PropertyID -> Scope -> Element
-                             -> Ptr CUInt
-                             -> Ptr Bool
+  c_AudioUnitGetPropertyInfo :: AudioUnit -> PropertyID -> Scope -> Element
+                             -> Ptr CUInt -> Ptr Bool
                              -> IO ComponentResult
 
 -- Obtain size and read/write access for an AudioUnit property
@@ -48,16 +48,13 @@ getPropertyInfo au prp scp elt =
 {-# INLINE getPropertyInfo #-}
 
 foreign import ccall "AUComponent.h AudioUnitGetProperty"
-  c_AudioUnitGetProperty :: AudioUnit
-                         -> PropertyID -> Scope -> Element
-                         -> Ptr ()
-                         -> Ptr CUInt
+  c_AudioUnitGetProperty :: AudioUnit -> PropertyID -> Scope -> Element
+                         -> Ptr () -> Ptr CUInt
                          -> IO ComponentResult
 
 -- | Read a scalar property value
 getProperty :: Storable a
-            => AudioUnit
-            -> PropertyID -> Scope -> Element
+            => AudioUnit -> PropertyID -> Scope -> Element
             -> IO a
 getProperty au prp scp elt = get undefined where
   get :: Storable a => a -> IO a
@@ -71,18 +68,43 @@ getProperty au prp scp elt = get undefined where
 
 -- | Read a 'List' of property values
 getPropertyList :: Storable a
-                => AudioUnit
-                -> PropertyID -> Scope -> Element
+                => AudioUnit -> PropertyID -> Scope -> Element
                 -> IO [a]
 getPropertyList au prp scp elt = get undefined where
   get :: Storable a => a -> IO [a]
-  get a = let size = sizeOf a in do
-    alloca $ \szP -> do
+  get a = alloca $ \szP -> do
     c_AudioUnitGetPropertyInfo au prp scp elt szP nullPtr
     n <- fromIntegral <$> peek szP
-    allocaBytes (size*n) $ \outP -> do
-    poke szP $ toEnum (size*n)
+    let size  = sizeOf a
+        width = size * n
+    allocaBytes width $ \outP -> do
+    poke szP $ toEnum width
     c_AudioUnitGetProperty au prp scp elt (castPtr outP) szP
     n' <- (`div` size) . fromIntegral <$> peek szP
     forM (take n' [0..]) (peekByteOff outP . (*size))
 {-# INLINE getPropertyList #-}
+
+foreign import ccall "AUComponent.h AudioUnitGetParameter"
+  c_AudioUnitGetParameter :: AudioUnit -> ParameterID -> Scope -> Element
+                          -> Ptr ParameterValue
+                          -> IO ComponentResult
+
+getParameter :: AudioUnit -> ParameterID -> Scope -> Element
+             -> IO ParameterValue
+getParameter au pid scp elt =
+  alloca $ \vP -> do
+  c_AudioUnitGetParameter au pid scp elt vP
+  peek vP
+{-# INLINE getParameter #-}
+
+foreign import ccall "AUComponent.h AudioUnitSetParameter"
+  c_AudioUnitSetParameter :: AudioUnit -> ParameterID -> Scope -> Element
+                          -> ParameterValue -> CUInt
+                          -> IO ComponentResult
+
+setParameter :: AudioUnit -> ParameterID -> Scope -> Element
+             -> ParameterValue -> Int
+             -> IO ()
+setParameter au pid scp elt val offsetSampleFrame = do
+  c_AudioUnitSetParameter au pid scp elt val (toEnum offsetSampleFrame)
+  return ()
